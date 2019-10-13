@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.itheima.dao.OrderDao">
+    <resultMap id="orderMap" type="order">
+        <result property="memberId" column="member_id"/>
+        <result property="packageId" column="package_id"/>
+    </resultMap>
+
+    <select id="findByCondition" parameterType="order" resultMap="orderMap">
+        select * from t_order
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="memberId != null">
+                and member_id = #{memberId}
+            </if>
+            <if test="orderDate != null">
+                and orderDate = #{orderDate}
+            </if>
+            <if test="orderType != null">
+                and orderType = #{orderType}
+            </if>
+            <if test="orderStatus != null">
+                and orderStatus = #{orderStatus}
+            </if>
+            <if test="packageId != null">
+                and package_id = #{packageId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="add" parameterType="order">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select last_insert_id()
+        </selectKey>
+        insert into t_order(member_id,orderDate,orderType,orderStatus,package_id) values
+        (#{memberId},#{orderDate},#{orderType},#{orderStatus},#{packageId})
+    </insert>
+
+    <select id="findById4Detail" parameterType="int" resultType="map">
+        SELECT
+            m.name member,p.name package,o.orderDate orderDate,o.orderType orderType
+        FROM
+            t_order o,t_member m,t_package p
+        WHERE
+            o.member_id = m.id AND o.package_id = p.id AND o.id = #{id};
+    </select>
+
+    <select id="findOrderCountByDate" parameterType="String" resultType="int">
+        select count(id) from t_order where orderDate = #{value}
+    </select>
+
+    <select id="findOrderCountBetweenDate" parameterType="String" resultType="int">
+        select count(id) from t_order where orderDate between #{startDate} and #{endDate}
+    </select>
+
+    <select id="findVisitsCountByDate" parameterType="String" resultType="int">
+        select count(id) from t_order where orderDate = #{value} and orderStatus = '已到诊'
+    </select>
+
+    <select id="findVisitsCountAfterDate" parameterType="String" resultType="int">
+        select count(id) from t_order where orderDate &gt;= #{value} and orderStatus = '已到诊'
+    </select>
+
+    <select id="findHotPackage" resultType="map">
+        select p.name,count(o.id) package_count,count(o.id)/(select count(id) from t_order) proportion
+        from t_order o,t_package p where p.id = o.package_id group by o.package_id order by package_count desc
+        limit 0,4
+    </select>
+
+</mapper>

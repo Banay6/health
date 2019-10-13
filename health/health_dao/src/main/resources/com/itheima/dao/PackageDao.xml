@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.itheima.dao.PackageDao">
+
+    <resultMap id="packageDetailMap" type="package">
+        <id property="id" column="package_id"/>
+        <result property="name" column="name"/>
+        <result property="sex" column="sex"/>
+        <result property="age" column="age"/>
+        <result property="remark" column="remark"/>
+        <result property="img" column="img"/>
+
+        <collection property="checkGroups" column="checkgroup_id" ofType="checkgroup">
+            <id property="id" column="checkgroup_id"/>
+            <result property="name" column="checkgroup_name"/>
+            <result property="remark" column="checkgroup_remark"/>
+
+            <collection property="checkItems" column="checkitem_id" ofType="checkitem">
+                <id property="id" column="checkitem_id"/>
+                <result property="name" column="checkitem_name"/>
+            </collection>
+
+        </collection>
+    </resultMap>
+
+    <select id="getPackageDetail" parameterType="int" resultMap="packageDetailMap">
+        SELECT
+            p.id package_id,p.name NAME,p.sex sex,p.age age,p.remark remark,p.img img,cg.id checkgroup_id,cg.name checkgroup_name,cg.remark checkgroup_remark,ci.id checkitem_id,ci.name checkitem_name
+        FROM
+            t_package p,t_checkgroup cg,t_checkitem ci,t_package_checkgroup tpc,t_checkgroup_checkitem tcc
+        WHERE
+            p.id = tpc.package_id AND cg.id = tpc.checkgroup_id AND cg.id = tcc.checkgroup_id AND ci.id = tcc.checkitem_id AND p.id = #{id}
+    </select>
+
+    <insert id="add" parameterType="package">
+        <selectKey resultType="int" order="AFTER" keyProperty="id">
+            select last_insert_id()
+        </selectKey>
+        insert into t_package
+        (code,name,sex,age,helpCode,price,remark,attention,img)
+        values
+        (#{code},#{name},#{sex},#{age},#{helpCode},#{price},#{remark},#{attention},#{img})
+    </insert>
+
+    <insert id="setPackageAndCheckGroup" parameterType="map">
+        insert into t_package_checkgroup values (#{package_id},#{checkgroup_id})
+    </insert>
+
+    <select id="findByCondition" parameterType="String" resultType="package">
+        select * from t_package
+        <where>
+            <if test="value!=null and value.length>0">
+                code like #{value} or name like #{value} or helpCode like #{value}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="findById" parameterType="int" resultType="package">
+        select * from t_package where id = #{id}
+    </select>
+
+    <select id="findCheckGroupByPackageId" parameterType="int" resultType="int">
+        select checkgroup_id from t_package_checkgroup where package_id = #{id}
+    </select>
+
+    <delete id="deleteRelationship" parameterType="int">
+        delete from t_package_checkgroup where package_id = #{id}
+    </delete>
+
+    <update id="edit" parameterType="package">
+        update t_package set name=#{name},code=#{code},helpCode=#{helpCode},sex=#{sex},age=#{age},price=#{price},remark=#{remark},attention=#{attention},img=#{img} where id=#{id}
+    </update>
+
+    <delete id="deletePackageById" parameterType="int">
+        delete from t_package where id = #{id}
+    </delete>
+
+    <select id="findAll" resultType="package">
+        select * from t_package
+    </select>
+
+    <select id="findPackageCount" resultType="map">
+        SELECT s.name,COUNT(o.id) AS value
+        FROM t_order o ,t_package s
+        WHERE o.package_id = s.id
+        GROUP BY s.name
+    </select>
+</mapper>

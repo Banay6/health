@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 页面meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>传智健康</title>
+    <meta name="description" content="传智健康">
+    <meta name="keywords" content="传智健康">
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../plugins/echarts/echarts.js"></script>
+
+</head>
+<body class="hold-transition">
+<div id="app">
+    <div class="content-header">
+        <h1>统计分析<small>会员数量</small></h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>统计分析</el-breadcrumb-item>
+            <el-breadcrumb-item>会员数量</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+
+    <div class="app-container">
+        <el-tabs v-model="activeName" type="card">
+            <el-tab-pane label="一年内会员数量" name="first">
+                <div class="box">
+                    <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
+                    <div id="chart1" style="height:600px;"></div>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="指定时间段会员数量" name="second">
+                <div class="box">
+                    <el-form ref="monthForm" label-position="right" label-width="100px">
+                        <el-row>
+                            <el-col :span="6">
+                                <el-form-item label="起始月份" prop="value1">
+                                    <el-date-picker
+                                            v-model="startMonth"
+                                            type="month"
+                                            placeholder="选择月"
+                                            value-format="yyyy-MM"
+                                    >
+                                    </el-date-picker>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="6">
+                                <el-form-item label="结束月份" prop="value2">
+                                    <el-date-picker
+                                            v-model="endMonth"
+                                            type="month"
+                                            placeholder="选择月"
+                                            value-format="yyyy-MM"
+                                    >
+                                    </el-date-picker>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="4">
+                                <el-button type="primary" @click="submit()">确定</el-button>
+                            </el-col>
+                        </el-row>
+                    </el-form>
+                    <div id="chart0" style="height:600px;width: 600px;"></div>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="按年龄段划分" name="third">
+                <div class="box">
+                    <div id="chartAge" style="height:600px;width: 600px;"></div>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="按性别划分" name="fourth">
+                <div class="box">
+                    <div id="chartSex" style="height:600px;width: 600px;"></div>
+                </div>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+</div>
+</body>
+<!-- 引入组件库 -->
+<script src="../js/vue.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript">
+
+    var myChart1;
+    var myChart0;
+    var myChartSex;
+    var myChartAge;
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                activeName: 'first',
+                startMonth: '',
+                endMonth: '',
+            };
+        },
+        mounted() {
+            myChart1 = echarts.init(document.getElementById('chart1'));
+            myChart0 = echarts.init(document.getElementById('chart0'));
+            myChartSex = echarts.init(document.getElementById('chartSex'));
+            myChartAge = echarts.init(document.getElementById('chartAge'));
+            axios.get("/report/getMemberReport.do").then((res) => {
+                myChart1.setOption(
+                    {
+                        title: {
+                            text: '会员数量'
+                        },
+                        tooltip: {},
+                        legend: {
+                            data: ['会员数量']
+                        },
+                        xAxis: {
+                            data: res.data.data.months
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: [{
+                            name: '会员数量',
+                            type: 'line',
+                            data: res.data.data.memberCount
+                        }]
+                    });
+            });
+            this.setChartSex();
+            this.setChartAge();
+
+        },
+        methods: {
+            submit() {
+                if (this.startMonth > this.endMonth || this.startMonth.length < 1 || this.endMonth.length < 1) {
+                    this.$message.error("请选择正确的日期");
+                    myChart0.setOption(
+                        {
+                            title: {
+                                text: '会员数量'
+                            },
+                            tooltip: {},
+                            legend: {
+                                data: ['会员数量']
+                            },
+                            xAxis: {
+                                data: ''
+                            },
+                            yAxis: {
+                                type: 'value'
+                            },
+                            series: [{
+                                name: '会员数量',
+                                type: 'line',
+                                data: ''
+                            }]
+                        });
+                } else {
+                    axios.get("/report/findMemberCountBy2Month.do?startMonth=" + this.startMonth + "&endMonth=" + this.endMonth).then((res) => {
+                        if (res.data.flag) {
+                            myChart0.setOption(
+                                {
+                                    title: {
+                                        text: '会员数量'
+                                    },
+                                    tooltip: {},
+                                    legend: {
+                                        data: ['会员数量']
+                                    },
+                                    xAxis: {
+                                        data: res.data.data.months
+                                    },
+                                    yAxis: {
+                                        type: 'value'
+                                    },
+                                    series: [{
+                                        name: '会员数量',
+                                        type: 'line',
+                                        data: res.data.data.memberCount
+                                    }]
+                                });
+                        }
+                    }).catch();
+                }
+            },
+            setChartSex() {
+                axios.get("/report/getGender.do").then((res) => {
+                    if (res.data.flag) {
+                        myChartSex.setOption({
+                            title: {
+                                text: '性别占比',
+                                subtext: '',
+                                x: 'center'
+                            },
+                            tooltip: {//提示框组件
+                                trigger: 'item',//触发类型，在饼形图中为item
+                                formatter: "{a} <br/>{b} : {c} ({d}%)"//提示内容格式
+                            },
+                            legend: {
+                                orient: 'vertical',
+                                left: 'left',
+                                data: res.data.data.genderNames
+                                // Legend data should be same with series name or data name
+                            },
+                            series: [
+                                {
+                                    name: '性别占比',
+                                    type: 'pie',
+                                    radius: '55%',
+                                    center: ['50%', '60%'],
+                                    data: res.data.data.genderCount,
+                                    itemStyle: {
+                                        emphasis: {
+                                            shadowBlur: 10,
+                                            shadowOffsetX: 0,
+                                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                        }
+                                    }
+                                }
+                            ]
+                        });
+                    }
+                });
+            },
+            setChartAge() {
+                axios.get("/report/getAge.do").then((res) => {
+                    if (res.data.flag) {
+                        myChartAge.setOption({
+                            title: {
+                                text: '年龄段占比',
+                                subtext: '',
+                                x: 'center'
+                            },
+                            tooltip: {//提示框组件
+                                trigger: 'item',//触发类型，在饼形图中为item
+                                formatter: "{a} <br/>{b} : {c} ({d}%)"//提示内容格式
+                            },
+                            legend: {
+                                orient: 'vertical',
+                                left: 'left',
+                                data: res.data.data.ageName
+                            },
+                            series: [
+                                {
+                                    name: '年龄段占比',
+                                    type: 'pie',
+                                    radius: '55%',
+                                    center: ['50%', '60%'],
+                                    data: res.data.data.ageData,
+                                    itemStyle: {
+                                        emphasis: {
+                                            shadowBlur: 10,
+                                            shadowOffsetX: 0,
+                                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                        }
+                                    }
+                                }
+                            ]
+                        });
+                    }
+                });
+            }
+        }
+    });
+</script>
+</html>

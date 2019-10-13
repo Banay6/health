@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.itheima.dao.OrderSettingDao">
+    <select id="findCountByOrderDate" parameterType="Date" resultType="long">
+        select count(1) from t_ordersetting where orderDate = #{orderDate}
+    </select>
+
+    <update id="editNumberByOrderDate" parameterType="orderSetting">
+        update t_ordersetting set number = #{number} where orderDate = #{orderDate}
+    </update>
+
+    <insert id="add" parameterType="orderSetting">
+        insert into t_ordersetting
+      		(orderDate,number,reservations)
+                      values
+      		(#{orderDate},#{number},#{reservations})
+    </insert>
+
+    <select id="getOrderSettingByMonth" parameterType="String" resultType="ordersetting">
+        select * from t_ordersetting where orderDate between #{startDate} and #{endDate}
+    </select>
+
+    <select id="findReservationsByOrderDate" parameterType="date" resultType="integer">
+        select reservations from t_ordersetting where orderDate = #{orderDate}
+    </select>
+
+    <select id="findByOrderDate" parameterType="String" resultType="ordersetting">
+        select * from t_ordersetting where orderDate = #{orderDate}
+    </select>
+
+    <update id="editReservationsByOrderDate">
+        update t_ordersetting set reservations = reservations + #{num} where orderDate = #{orderDate}
+    </update>
+
+    <delete id="clearOrderSetting" parameterType="String">
+        delete from t_ordersetting where orderDate &lt; #{firstDay4ThisMonth}
+    </delete>
+</mapper>

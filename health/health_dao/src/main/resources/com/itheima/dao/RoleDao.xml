@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.itheima.dao.RoleDao">
+    <select id="findByUid" parameterType="integer" resultType="role">
+        select * from t_role where id = (select role_id from t_user_role where user_id = #{id})
+    </select>
+
+    <select id="findAll" resultType="Role">
+        select * from t_role
+    </select>
+
+    <insert id="setRoleAndPermission" parameterType="map">
+        insert into t_role_permission values(#{role_id},#{permission_id})
+    </insert>
+
+    <insert id="setRoleAndMenu" parameterType="map">
+        insert into t_role_menu values(#{role_id},#{menu_id})
+    </insert>
+
+    <insert id="add" parameterType="role">
+        <selectKey resultType="int" order="AFTER" keyProperty="id">
+            select last_insert_id()
+        </selectKey>
+        insert into t_role(name,keyword,description)
+        values
+        (#{name},#{keyword},#{description})
+    </insert>
+
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM t_role WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteRelationshipWithPermission" parameterType="int">
+        delete from t_role_permission where role_id = #{id}
+    </delete>
+
+    <delete id="deleteRelationshipWithMenu" parameterType="int">
+        delete from t_role_menu where role_id = #{id}
+    </delete>
+
+    <select id="findById" parameterType="int" resultType="role">
+        select * from t_role where id = #{id}
+    </select>
+
+    <select id="findPermissionIdsByRoleId" parameterType="int" resultType="integer">
+        select permission_id from t_role_permission where role_id = #{id}
+    </select>
+
+    <select id="findMenuIdsByRoleId" parameterType="int" resultType="integer">
+        select menu_id from t_role_menu where role_id = #{id}
+    </select>
+
+    <update id="edit" parameterType="role">
+        update t_role set name=#{name},keyword=#{keyword},description=#{description} where id = #{id}
+    </update>
+
+    <select id="findPage" parameterType="String" resultType="role">
+        select * from t_role
+        <where>
+            <if test="value != null and value.length > 0">
+                and name like #{value} or keyword like #{value}
+            </if>
+        </where>
+    </select>
+</mapper>

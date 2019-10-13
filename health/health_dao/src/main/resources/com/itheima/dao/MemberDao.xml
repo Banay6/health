@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.itheima.dao.MemberDao">
+    <select id="findByTelephone" parameterType="string" resultType="member">
+        select * from t_member where phoneNumber = #{phoneNumber}
+    </select>
+
+    <insert id="add" parameterType="member">
+        <selectKey resultType="int" keyProperty="id" order="AFTER">
+            select last_insert_id()
+        </selectKey>
+        insert into t_member (name,sex,idCard,phoneNumber,regTime) values
+        (#{name},#{sex},#{idCard},#{phoneNumber},#{regTime})
+    </insert>
+
+    <select id="findMemberCountBeforeDate" parameterType="String" resultType="int">
+        select count(id) from t_member where regTime &lt;= #{value}
+    </select>
+
+    <select id="findMemberCountByDate" parameterType="String" resultType="int">
+        select count(id) from t_member where regTime = #{value}
+    </select>
+
+    <select id="findMemberTotalCount" resultType="int">
+        select count(id) from t_member
+    </select>
+
+    <select id="findMemberCountAfterDate" parameterType="String" resultType="int">
+        select count(id) from t_member where regTime &gt;= #{value}
+    </select>
+
+    <!--性别分析-->
+    <select id="getGender" resultType="map">
+        select
+            (case sex when '1' then '男' when '2' then '女' else '不明' end) name,count(0) value
+        from
+            t_member
+        group by sex
+    </select>
+
+    <!--年龄分析-->
+    <select id="getAge" resultType="map">
+
+        select (case
+        when birthday>='2002-01-01' and birthday&lt;'2019-08-03' then '0到18'
+        when birthday>='1989-01-01' and birthday&lt;'2002-01-01' then '18到30'
+        when birthday>='1975-01-01' and birthday&lt;'1989-01-01' then '30到45'
+        when birthday>='1900-01-01' and birthday&lt;'1975-01-01' then '45以上'
+        when birthday is NULL then '不明'
+        end) name ,count(0) value
+        from t_member
+        group by (case
+        when birthday>='2002-01-01' and birthday&lt;'2019-08-03' then '0到18'
+        when birthday>='1989-01-01' and birthday&lt;'2002-01-01' then '18到30'
+        when birthday>='1975-01-01' and birthday&lt;'1989-01-01' then '30到45'
+        when birthday>='1900-01-01' and birthday&lt;'1975-01-01' then '45以上'
+        when birthday is NULL then '不明'
+        end)
+    </select>
+</mapper>
